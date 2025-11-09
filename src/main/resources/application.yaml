@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: RegisterUser
+  datasource:
+    url: jdbc:mysql://mysql.saas-control.svc.cluster.local:3306/userdb
+    username: root
+    password: rootpassword
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 1000
+      initialization-fail-timeout: 10  # Fail immediately if DB not reachable
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        disable_clob: true
+    show-sql: true
+server:
+  port: 8080
+  host: 0.0.0.0
+
+#logging:
+#  level:
+#    org.springframework: TRACE
