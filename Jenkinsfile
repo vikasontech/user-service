@@ -16,13 +16,25 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
+         steps {
                 script {
-                    // Use BRANCH_NAME if available, otherwise default to 'main'
                     def branch = params.BRANCH_NAME ?: 'main'
                     echo "Checking out branch: ${branch}"
-                    git branch: branch, url: "${REPOSITORY}", credentialsId: 'vikas-github'
-                    def gitTag = sh(script: "git describe --tags --exact-match 2>/dev/null || echo ''", returnStdout: true).trim()
+
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${branch}"]],
+                        userRemoteConfigs: [[
+                            url: REPOSITORY,
+                            credentialsId: 'vikas-github'
+                        ]]
+                    ])
+
+                    def gitTag = sh(
+                        script: "git describe --tags --exact-match 2>/dev/null || echo ''",
+                        returnStdout: true
+                    ).trim()
+
                     echo "Git tag: ${gitTag}"
                 }
             }
