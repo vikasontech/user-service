@@ -4,7 +4,7 @@ pipeline {
     environment {
         REGISTRY = "vikason"
         APP_NAME = "user-service"
-        REPOSITORY = "https://vikasonapp@github.com/vikasontech/user-service.git"
+        REPOSITORY = "https://github.com/vikasontech/user-service.git"
     }
     parameters {
         string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to build')
