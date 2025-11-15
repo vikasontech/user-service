@@ -16,7 +16,7 @@ pipeline {
 
     stages {
         stage('Checkout') {
-         steps {
+            steps {
                 script {
                     def branch = params.BRANCH_NAME ?: 'main'
                     echo "Checking out branch: ${branch}"
@@ -36,6 +36,9 @@ pipeline {
                     ).trim()
 
                     echo "Git tag: ${gitTag}"
+                    
+                    // Store git tag for later stages
+                    env.GIT_TAG = gitTag
                 }
             }
         }
@@ -45,7 +48,8 @@ pipeline {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-11'
                     args '-v /var/jenkins_home/.m2:/root/.m2'
-
+                    // Reuse the node to keep the workspace
+                    reuseNode true
                 }
             }
             steps {
@@ -56,55 +60,47 @@ pipeline {
                 echo "Maven build finished"
             }
         }
+        
         stage('Docker Login') {
-                steps {
-                    script {
-                        withCredentials([usernamePassword(credentialsId: 'docker-hub-vikason', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
-                            sh '''
-                                echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                            '''
-                        }
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-vikason', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+                        sh '''
+                            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                        '''
                     }
                 }
             }
+        }
+        
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Get Git tag
-                    def gitTag = sh(script: "git describe --tags --exact-match 2>/dev/null || echo ''", returnStdout: true).trim()
-                    // if (!gitTag) {
-                    //     echo "No Git tag found on this commit. Skipping build."
-                    //     return
-                    // }
-
+                    // Get Git tag from environment variable set in Checkout stage
+                    def gitTag = env.GIT_TAG ?: ''
+                    
                     // Decide environment based on branch
                     def branch = params.BRANCH_NAME ?: env.GIT_BRANCH ?: "unknown"
                     def environment = (branch == "main") ? "prod" : "staging"
 
                     // Tag formats
-                    def versionedTag = "${environment}_${gitTag}"
+                    def versionedTag = gitTag ? "${environment}_${gitTag}" : "${environment}_${BUILD_NUMBER}"
                     def latestTag = "${environment}_latest"
 
                     def versionedImage = "${REGISTRY}/${APP_NAME}:${versionedTag}"
                     def latestImage = "${REGISTRY}/${APP_NAME}:${latestTag}"
-                    def buildNumberImage= "${REGISTRY}/${APP_NAME}:${BUILD_NUMBER}"
+                    def buildNumberImage = "${REGISTRY}/${APP_NAME}:${BUILD_NUMBER}"
 
-                    // jar in target data not found
+                    // Unstash jar files
                     unstash 'jar-files'
-                        // docker build -t ${versionedImage} -t ${latestImage} -t ${buildNumberImage} .
-                        // docker push ${latestImage}
-                        // docker push ${buildNumberImage}
+                    
                     sh """
                         ls -lh target/
                         docker buildx build \
-                                    --platform linux/amd64,linux/arm64 \
-                                    -t ${versionedImage} -t ${latestImage} -t ${buildNumberImage} \
-                                    --push .
+                            --platform linux/amd64,linux/arm64 \
+                            -t ${versionedImage} -t ${latestTag} -t ${buildNumberImage} \
+                            --push .
                     """
-                        //todo add it in sh after work done
-                        // docker build -t ${versionedImage} -t ${latestImage} -t ${buildNumberImage} .
-                        // docker push ${latestImage}
-                        // docker push ${buildNumberImage}
                 }
             }
         }
