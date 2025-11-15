@@ -29,16 +29,30 @@ pipeline {
                             credentialsId: 'vikas-github'
                         ]]
                     ])
-
+                }
+            }
+        }
+        
+        stage('Get Git Info') {
+            steps {
+                script {
+                    // Get git tag and store in environment variable
                     def gitTag = sh(
                         script: "git describe --tags --exact-match 2>/dev/null || echo ''",
                         returnStdout: true
                     ).trim()
 
                     echo "Git tag: ${gitTag}"
-                    
-                    // Store git tag for later stages
                     env.GIT_TAG = gitTag
+                    
+                    // Also get commit hash as fallback
+                    def gitCommit = sh(
+                        script: "git rev-parse --short HEAD",
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "Git commit: ${gitCommit}"
+                    env.GIT_COMMIT = gitCommit
                 }
             }
         }

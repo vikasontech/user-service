@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+.gitattributes
+.mvn/
+mvnw
+mvnw.cmd
+src/main/resources/application-local.yaml
+
+#
+#
+#
+#

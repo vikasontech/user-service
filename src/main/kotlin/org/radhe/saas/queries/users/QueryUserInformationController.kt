@@ -11,10 +11,10 @@ class QueryUserInformationController(
     private val queryUserService: QueryUserService
 ) {
 
-    @GetMapping("/user")
+    @GetMapping("/api/v1/user/{id}")
     fun accept(@PathVariable id: String): ResponseEntity<UserDetailsDTO?> {
         val userDetailDTO= queryUserService.accept(id)
         return userDetailDTO.map { ResponseEntity.ok(it) }
-            .orElse(ResponseEntity.status(HttpStatus.LENGTH_REQUIRED).build());
+            .orElse(ResponseEntity.status(HttpStatus.NO_CONTENT).build());
     }
 }

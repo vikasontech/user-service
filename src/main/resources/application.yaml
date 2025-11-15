@@ -1,6 +1,25 @@
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    # groups-order can also go here
+    groups-order: DESC
+  # show-actuator: true   # Optional, uncomment if needed
+
+  # Package to scan for APIs
+#  packages-to-scan: com.vikason
+
 spring:
+  profiles:
+    active: local
+
   application:
-    name: RegisterUser
+    name: user-service
   datasource:
     url: jdbc:mysql://mysql.saas-control.svc.cluster.local:3306/userdb
     username: root

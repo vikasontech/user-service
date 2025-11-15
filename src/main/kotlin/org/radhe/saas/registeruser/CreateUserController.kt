@@ -10,7 +10,7 @@ class CreateUserController(
     private val createUserService: CreateUserService
 ) {
 
-    @PostMapping("/user")
+    @PostMapping("/api/v1/user")
     fun createUser(@RequestBody createUserRequest: CreateUserRequest): ResponseEntity<CreateUserService?> {
         val createUser = createUserService.createUser(createUserRequest)
         return ResponseEntity.ok(createUserService)
